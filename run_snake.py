@@ -13,11 +13,38 @@ class World():
     
     def __init__(self, game):
         """Создает мир"""
-        pass
+        self.default_win = ((0, 0), (self.rows - 1, self.rows - 1))
+        self.food_gen = FoodGenerator(self)
+        self.food_gen.create_some_food()
     
     def draw(self):
         """Рисует текущее состояние мира и объектов в нём"""
         pass
+    
+    def get_coords_from_act(self, coords, action):
+        """Вычисляет новую координату объекта по действию пользователя"""
+        pass
+    
+    class FoodGenerator():
+        """Генератор еды"""
+        
+        def __init__(self, world, food_number=1):
+            """Создает генератор"""
+            self.world = world
+            self.fd_num = food_number
+        
+        def create_some_food(self, window=None):
+            """Создает еду"""
+            window = window if window else self.world.default_win
+            # TODO: генерировать n={self.fd_num} случайных неповторяющихся целочисленных 
+            #       координат в рамках окна={window} и положить их в {self.world.food}
+            self.world.NO_FOOD = False
+    
+        def delete_food(self, fd_coords):
+            """Удаляет еду из мира"""
+            self.world.food.remove(fd_coords)
+            if not self.world.food:
+                self.world.NO_FOOD = True
 
 
 class Snake():
@@ -29,8 +56,15 @@ class Snake():
         """Создает змейку"""
         self.game = game
         self.world = world
-        self.coords = type(self).FIFO(start_coords)
-        pass
+        self.body_coords = type(self).FIFO(start_coords)
+    
+    @property
+    def head(self):
+        return self.body_coords.queue[-1]
+    
+    @property
+    def tail(self):
+        return self.body_coords.queue[:-1]
     
     class FIFO():
         """FIFO-очередь
@@ -56,17 +90,25 @@ class Snake():
     
     def move(self):
         """Перемещает змейку"""
-        pass
+        action = self.game.get_move_act()
+        new_coord = self.world.get_coords_from_act(self.head, action)
+        if new_coord in self.world.food:
+            self.body_coords.expand(new_coord)
+            self.world.food_gen.delete_food(new_coord)
+        else:
+            self.body_coords.put(new_coord)
+            if not self.selfcheck():
+                self.status = 'DIEING'
     
     def selfcheck(self):
-        """Проверяет своё состояние"""
-        pass
-    
+        """Проверяет своё состояние: не укусила ли свой хвост"""
+        return not self.head in self.tail
 
 
 class Game():
     """Игра Змейка
-Создает, запускает и контролирует игру"""
+Создает, запускает и контролирует игру, захватывает действия пользователя"""
+    
     def __init__(self):
         """Создает игру"""
         pass
@@ -77,3 +119,8 @@ class Game():
     
     def play(self):
         """Контролирует игру"""
+        pass
+        
+    def get_move_act(self):
+        """Возвращает действие управления змейкой"""
+        pass
